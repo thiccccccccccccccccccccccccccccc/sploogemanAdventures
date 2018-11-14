@@ -4,41 +4,50 @@ using UnityEngine;
 
 public class CameraControl : MonoBehaviour {
 	
-	Vector2 move = new Vector2(0,0);
-	public float cameraSpeed = 1.0f;
+	
+	public float cameraSpeed = 4.0f;
+	public float maxCameraDistance = 5.0f;
+	private float move;
+	private float[] buffer = { -0.02f, 0.02f };
+	private PlayerPlatformerController ppc;
 	// Use this for initialization
 	void Start () {
-		
+		ppc = transform.parent.GetComponent<PlayerPlatformerController>();
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		
 		move = GetBaseInput();
-		/**if (Input.GetButtonUp("CameraHorizontal")) {
-			transform.localPosition = new Vector3(0,0, -10);
-		}**/
 		smoothCameraComeBack();
-		transform.Translate(move * cameraSpeed * Time.deltaTime);
-		Debug.Log(transform.localPosition);
+		if (move != 0 && ppc.grounded) {
+			if (transform.localPosition.x > -maxCameraDistance && transform.localPosition.x < maxCameraDistance) {
+				transform.Translate(new Vector3(move, 0, 0) * cameraSpeed * Time.deltaTime);
+				move = 0f;
+			}
+			
+		}
+		
 	}
 	
 	private void smoothCameraComeBack() {
-		if (Input.GetButtonUp("CameraHorizontal")) {
-			for (float i = 10f; i>=0f; i-=0.1f) {
-				transform.localPosition = new Vector3(i*Time.deltaTime,0, -10);
+		Vector3 moveFactor = new Vector3(1.0f,0f,0f);
+		
+		if (move == 0) {
+			if (transform.localPosition.x != 0) {
+				if (transform.localPosition.x < 0) {
+					transform.Translate(moveFactor * cameraSpeed * Time.deltaTime);
+				} else if (transform.localPosition.x > 0) {
+					transform.Translate(-moveFactor * cameraSpeed * Time.deltaTime);
+				}
+			}
+			if (transform.localPosition.x > buffer[0] && transform.localPosition.x < buffer[1]) {
+				transform.localPosition = new Vector3(0,0, -10.0f);
 			}
 		}
 	}
 	
-	private Vector2 GetBaseInput() {
-		Vector2 input = new Vector2();
-		if (Input.GetKey(KeyCode.Q)) {
-			input += new Vector2(-1, 0);
-		}
-		if (Input.GetKey(KeyCode.E)) {
-			input += new Vector2(1, 0);
-		}
+	private float GetBaseInput() {
+		float input = Input.GetAxisRaw("CameraHorizontal");
 		return input;
 	}
 }
